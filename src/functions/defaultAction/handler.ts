@@ -53,6 +53,7 @@ interface UpdateLocation extends DefaultWebSocketMessage {
   area: string,
   chunk: [number, number],
   position: [number, number],
+  emotion: string,
   updateChunk: boolean,
 }
 
@@ -124,11 +125,13 @@ const defaultAction: APIGatewayProxyHandler = async (event) => {
             userId: typedBody.userId,
             playerType: typedBody.playerType,
             position: typedBody.position,
+            emotion: typedBody.emotion,
           }
           const payload = Uint8Array.from(Buffer.from(JSON.stringify(body)))
           return Promise.allSettled(
             results
               .flatMap(result => result.status == "fulfilled" ? result.value.Items : [])
+              .filter(item => item["connectionId"].S !== event.requestContext.connectionId)
               .map(item => {
                 return gatewayClient
                   .postToConnection({
